@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 rettle = { git = "ssh://git@github.com/slaterb1/rettle" }
+nom = "5.0.0"
