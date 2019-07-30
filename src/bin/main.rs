@@ -5,7 +5,7 @@ use rettle::brewer::Brewery;
 use nom::{
     IResult,
     sequence::{delimited, preceded},
-    character::complete::{char, space1, alphanumeric0},
+    character::complete::{char, space1, not_line_ending},
     bytes::complete::{tag, is_not, take},
     combinator::opt,
 };
@@ -27,7 +27,7 @@ fn datetime(input: &str) -> IResult<&str, &str> {
 }
 
 fn msg(input: &str) -> IResult<&str, &str> {
-    alphanumeric0(input)
+    not_line_ending(input)
 }
 
 fn data(input: &str) -> IResult<&str, Option<&str>> {
