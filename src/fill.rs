@@ -86,12 +86,12 @@ fn call_brewery(brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient + S
 }
 
 ///
-/// Implements the log file read, deserialization to specified data struct, and passes the data to the
+/// Implements the log file read, parse to specified data struct, and passes the data to the
 /// brewery for processing.
 ///
 /// # Arguments
 ///
-/// * `args` - Params specifying the filepath of the csv.
+/// * `args` - Params specifying the filepath, batch_size, and custom parser.
 /// * `brewery` - Brewery that processes the data.
 /// * `recipe` - Recipe for the ETL used by the Brewery.
 fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn Argument + Send>>, brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient + Send + Sync>>>>) {
