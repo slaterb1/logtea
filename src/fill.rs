@@ -118,7 +118,7 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
             // Pull out parser function
             let parser = &box_args.parser;
             
-            // Iterate over csv lines and push data into processer
+            // Iterate over log lines and push data into processer
             let mut tea_batch: Vec<Box<dyn Tea + Send>> = Vec::with_capacity(box_args.buffer_length);
             for line in reader.lines() {
                 let line = line.unwrap();
