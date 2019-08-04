@@ -1,14 +1,36 @@
-/*!
-# logtea
-This is a generic log file Fill Ingredient crate for use with `rettle` ETL. This crate uses [nom](https://docs.rs/nom/) as the parser library to allow any project to define how it wants to parse logs by supplying a custom built parser.
+use logtea::fill::{FillLogArg, FillLogTea};
+use rettle::pot::Pot;
+use rettle::ingredient::Pour;
+use rettle::tea::Tea;
+use rettle::brewer::Brewery;
 
-## Data Structures
-- FillLogArg: Ingredient params for FillLogTea
-- FillLogTea: Wrapper to simplifiy the creation of the Fill Ingredient to be used in the rettle Pot.
+use nom::{
+    IResult,
+    sequence::{delimited},
+    character::complete::{char, space1, not_line_ending},
+    bytes::complete::{tag, is_not, take},
+};
 
-## Example
-```ignore
-// Custom parser setup.
+use std::time::Instant;
+use std::any::Any;
+
+#[derive(Default, Clone, Debug)]
+struct LogTea {
+    log_type: String,
+    datetime: String,
+    msg: String,
+}
+
+impl Tea for LogTea {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn new(self: Box<Self>) -> Box<dyn Tea + Send> {
+        self
+    }
+}
+
+// Helper functions for example log parser.
 fn log_type(input: &str) -> IResult<&str, &str> {
     delimited(char('['), is_not("]"), char(']'))(input)
 }
@@ -45,11 +67,18 @@ fn main() {
 
     new_pot.add_source(fill_logtea);
 
-    // Steep/Pour operations of choice
+    new_pot.add_ingredient(Box::new(Pour{
+        name: String::from("pour logs"),
+        computation: Box::new(|tea_batch, _args| {
+            tea_batch.into_iter()
+                .map(|tea| {
+                    println!("Final Tea: {:?}", tea.as_any().downcast_ref::<LogTea>().unwrap());
+                    tea
+                })
+                .collect()
+        }),
+        params: None,
+    }));
 
     new_pot.brew(&brewery);
 }
-```
-*/
-
-pub mod fill;
