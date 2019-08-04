@@ -25,9 +25,6 @@ impl Tea for LogTea {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn new(self: Box<Self>) -> Box<dyn Tea + Send> {
-        self
-    }
 }
 
 // Helper functions for example log parser.
