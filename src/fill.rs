@@ -13,14 +13,18 @@ use nom::IResult;
 
 ///
 /// Ingredient params for LogTea.
-pub struct LogTeaArg {
+pub struct LogTeaArg<T>
+    where T: Tea + Send + Debug + ?Sized + 'static
+{
     /// The filepath to the csv that will be processed.
     filepath: String,
     buffer_length: usize,
-    parser: Fn(&str) -> IResult<&str, LogTea>,
+    parser: fn(&str) -> IResult<&str, T>,
 }
 
-impl LogTeaArg {
+impl<T> LogTeaArg<T> 
+    where T: Tea + Send + Debug + ?Sized + 'static
+{
     ///
     /// Returns a LogTeaArg to be used as params in LogTea.
     ///
@@ -29,13 +33,15 @@ impl LogTeaArg {
     /// * `filepath` - filepath for log file to load.
     /// * `buffer_length` - number of lines to process at a time.
     /// * `parser` - nom parser to parse data from lines
-    pub fn new<F: Fn()>(filepath: &str, buffer_length: usize, parser: F) -> LogTeaArg {
+    pub fn new(filepath: &str, buffer_length: usize, parser: fn(&str) -> IResult<&str, T>) -> LogTeaArg<T> {
         let filepath = String::from(filepath);
         LogTeaArg { filepath, buffer_length, parser }
     }
 }
 
-impl Argument for LogTeaArg {
+impl<T> Argument for LogTeaArg<T> 
+    where T: Tea + Send + Debug + Sized + 'static
+{
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -54,7 +60,7 @@ impl LogTea {
     /// * `name` - Ingredient name
     /// * `source` - Ingredient source
     /// * `params` - Params data structure holding the `filepath`, `buffer_length`, and `parser`
-    pub fn new<T: Tea + Send + Debug + ?Sized + 'static>(name: &str, source: &str, params: LogTeaArg) -> Box<Fill> 
+    pub fn new<T: Tea + Send + Debug + ?Sized + 'static>(name: &str, source: &str, params: LogTeaArg<T>) -> Box<Fill> 
         where for<'de> T: Deserialize<'de>
     {
         Box::new(Fill {
@@ -97,18 +103,18 @@ fn fill_from_log<T: Tea + Send + Debug + ?Sized + 'static>(args: &Option<Box<dyn
         None => (),
         Some(box_args) => {
             // Unwrap params.
-            let box_args = box_args.as_any().downcast_ref::<LogTeaArg>().unwrap();
+            let box_args = box_args.as_any().downcast_ref::<LogTeaArg<T>>().unwrap();
             
             // Initialize reader with specified file from path.
             let file = match File::open(&box_args.filepath) {
-                Ok(file) -> file,
+                Ok(file) => file,
                 Err(e) => {
                     println!("Failed opening file! Error: {:?}", e);
                     return
                 },
             };
 
-            let reader = BufReader::new(f);
+            let reader = BufReader::new(file);
             let lines = reader.lines();
             
             // Iterate over csv lines and push data into processer
