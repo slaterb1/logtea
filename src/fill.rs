@@ -137,3 +137,48 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{FillLogArg, FillLogTea};
+    use rettle::tea::Tea;
+    use rettle::pot::Pot;
+    use std::any::Any;
+    use nom::IResult;
+
+    #[derive(Default, Clone, Debug)]
+    struct TestLogTea {
+        log_type: String,
+        datetime: String,
+        msg: String,
+    }
+
+    impl Tea for TestLogTea {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn new(self: Box<Self>) -> Box<dyn Tea + Send> {
+            self
+        }
+    }
+
+    fn test_parser(input: &str) -> IResult<&str, TestLogTea> {
+        Ok((input, TestLogTea::default()))
+    }
+
+    #[test]
+    fn create_log_args() {
+        let log_args = FillLogArg::new("fixtures/test.csv", 50, test_parser);
+        assert_eq!(log_args.filepath, "fixtures/test.csv");
+        assert_eq!(log_args.buffer_length, 50);
+    }
+
+    #[test]
+    fn create_fill_logtea() {
+        let log_args = FillLogArg::new("fixtures/test.csv", 50, test_parser);
+        let fill_logtea = FillLogTea::new::<TestLogTea>("test_log", "fixture", log_args);
+        let mut new_pot = Pot::new();
+        new_pot.add_source(fill_logtea);
+        assert_eq!(new_pot.get_sources().len(), 1);
+        assert_eq!(new_pot.get_sources()[0].get_name(), "test_log");
+    }
+}
