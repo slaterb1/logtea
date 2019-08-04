@@ -30,6 +30,7 @@ impl Tea for LogTea {
     }
 }
 
+// Helper functions for example log parser.
 fn log_type(input: &str) -> IResult<&str, &str> {
     delimited(char('['), is_not("]"), char(']'))(input)
 }
