@@ -1,5 +1,7 @@
+use logtea::fill::{FillLogArg, FillLogTea};
 use rettle::pot::Pot;
-use rettle::ingredient::{Fill, Pour};
+use rettle::ingredient::Pour;
+use rettle::tea::Tea;
 use rettle::brewer::Brewery;
 
 use nom::{
@@ -9,11 +11,23 @@ use nom::{
     bytes::complete::{tag, is_not, take},
 };
 
-#[derive(Debug)]
+use std::time::Instant;
+use std::any::Any;
+
+#[derive(Default, Clone, Debug)]
 struct LogTea {
     log_type: &'static str,
     datetime: &'static str,
     msg: &'static str,
+}
+
+impl Tea for LogTea {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn new(self: Box<Self>) -> Box<dyn Tea + Send> {
+        self
+    }
 }
 
 fn log_type(input: &'static str) -> IResult<&'static str, &'static str> {
@@ -38,9 +52,11 @@ fn parse_log(input: &'static str) -> IResult<&str, LogTea> {
 }
 
 fn main() {
-    let test = "[INFO] - 2019-07-26T00:00:00 Server listening on port 8000";
-    let test2 = "[ERROR] - 2019-07-26T00:00:00 Error on request! {status: 400, msg: Bad Request, data: []}";
-    let res = parse_log(test2);
-    //let res2 = datetime(test);
-    println!("{:?}", res);
+    let test_fill_logarg = FillLogArg::new("fixtures/log.LOG", 50, parse_log);
+
+    let brewery = Brewery::new(4, Instant::now());
+    let mut new_pot = Pot::new();
+    let fill_cstea = FillLogTea::new::<LogTea>("log_tea_source", "log_fixture", test_fill_logarg);
+
+    new_pot.add_source(fill_cstea);
 }
