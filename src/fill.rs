@@ -102,15 +102,20 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
             let box_args = box_args.as_any().downcast_ref::<FillLogArg<T>>().unwrap();
             
             // Initialize reader with specified file from path.
-            let file = match File::open(&box_args.filepath) {
-                Ok(file) => file,
+            println!("{:?}", &box_args.filepath);
+            let f = File::open(&box_args.filepath); 
+
+            let reader = match f {
+                Ok(f) => {
+                    BufReader::new(f)
+                },
                 Err(e) => {
                     println!("Failed opening file! Error: {:}", e);
                     return
                 },
             };
 
-            let reader = BufReader::new(file);
+            // Pull out parser function
             let parser = &box_args.parser;
             
             // Iterate over csv lines and push data into processer
