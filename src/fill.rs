@@ -19,7 +19,7 @@ pub struct FillLogArg<T> where
     /// The filepath to the csv that will be processed.
     filepath: String,
     buffer_length: usize,
-    parser: fn(&'static str) -> IResult<&str, T>,
+    parser: fn(&str) -> IResult<&str, T>,
 }
 
 impl<T> FillLogArg<T> where
@@ -116,13 +116,14 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
             // Iterate over csv lines and push data into processer
             let mut tea_batch: Vec<Box<dyn Tea + Send>> = Vec::with_capacity(box_args.buffer_length);
             for line in reader.lines() {
+                let line = line.unwrap();
                 // Check if batch size has been reached and send to brewers if so.
                 if tea_batch.len() == box_args.buffer_length {
                     let recipe = Arc::clone(&recipe);
                     call_brewery(brewery, recipe, tea_batch);
                     tea_batch = Vec::with_capacity(box_args.buffer_length);
                 }
-                let (_input, tea) = parser(&line.unwrap()[..]).unwrap();
+                let (_input, tea) = parser(&line).unwrap();
                 tea_batch.push(Box::new(tea));
             }
             let recipe = Arc::clone(&recipe);
