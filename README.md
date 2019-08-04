@@ -1,4 +1,3 @@
-/*!
 # logtea
 This is a generic log file Fill Ingredient crate for use with `rettle` ETL. This crate uses [nom](https://docs.rs/nom/) as the parser library to allow any project to define how it wants to parse logs by supplying a custom built parser.
 
@@ -7,7 +6,7 @@ This is a generic log file Fill Ingredient crate for use with `rettle` ETL. This
 - FillLogTea: Wrapper to simplifiy the creation of the Fill Ingredient to be used in the rettle Pot.
 
 ## Example
-```ignore
+```rust
 // Custom parser setup.
 fn log_type(input: &str) -> IResult<&str, &str> {
     delimited(char('['), is_not("]"), char(']'))(input)
@@ -50,6 +49,3 @@ fn main() {
     new_pot.brew(&brewery);
 }
 ```
-*/
-
-pub mod fill;
