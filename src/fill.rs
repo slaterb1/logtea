@@ -18,7 +18,7 @@ pub struct FillLogArg<T> where
 {
     /// The filepath to the csv that will be processed.
     filepath: String,
-    buffer_length: usize,
+    batch_size: usize,
     parser: fn(&str) -> IResult<&str, T>,
 }
 
@@ -31,11 +31,11 @@ impl<T> FillLogArg<T> where
     /// # Arguments
     ///
     /// * `filepath` - filepath for log file to load.
-    /// * `buffer_length` - number of lines to process at a time.
+    /// * `batch_size` - number of lines to process at a time.
     /// * `parser` - nom parser to parse data from lines
-    pub fn new(filepath: &str, buffer_length: usize, parser: fn(&str) -> IResult<&str, T>) -> FillLogArg<T> {
+    pub fn new(filepath: &str, batch_size: usize, parser: fn(&str) -> IResult<&str, T>) -> FillLogArg<T> {
         let filepath = String::from(filepath);
-        FillLogArg { filepath, buffer_length, parser }
+        FillLogArg { filepath, batch_size, parser }
     }
 }
 
@@ -59,7 +59,7 @@ impl FillLogTea {
     ///
     /// * `name` - Ingredient name
     /// * `source` - Ingredient source
-    /// * `params` - Params data structure holding the `filepath`, `buffer_length`, and `parser`
+    /// * `params` - Params data structure holding the `filepath`, `batch_size`, and `parser`
     pub fn new<T: Tea + Send + Debug + Sized + 'static>(name: &str, source: &str, params: FillLogArg<T>) -> Box<Fill> {
         Box::new(Fill {
             name: String::from(name),
@@ -119,14 +119,14 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
             let parser = &box_args.parser;
             
             // Iterate over log lines and push data into processer
-            let mut tea_batch: Vec<Box<dyn Tea + Send>> = Vec::with_capacity(box_args.buffer_length);
+            let mut tea_batch: Vec<Box<dyn Tea + Send>> = Vec::with_capacity(box_args.batch_size);
             for line in reader.lines() {
                 let line = line.unwrap();
                 // Check if batch size has been reached and send to brewers if so.
-                if tea_batch.len() == box_args.buffer_length {
+                if tea_batch.len() == box_args.batch_size {
                     let recipe = Arc::clone(&recipe);
                     call_brewery(brewery, recipe, tea_batch);
-                    tea_batch = Vec::with_capacity(box_args.buffer_length);
+                    tea_batch = Vec::with_capacity(box_args.batch_size);
                 }
                 let (_input, tea) = parser(&line).unwrap();
                 tea_batch.push(Box::new(tea));
@@ -169,7 +169,7 @@ mod tests {
     fn create_log_args() {
         let log_args = FillLogArg::new("fixtures/test.csv", 50, test_parser);
         assert_eq!(log_args.filepath, "fixtures/test.csv");
-        assert_eq!(log_args.buffer_length, 50);
+        assert_eq!(log_args.batch_size, 50);
     }
 
     #[test]
