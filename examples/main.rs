@@ -1,8 +1,10 @@
 use logtea::fill::{FillLogArg, FillLogTea};
-use rettle::pot::Pot;
-use rettle::ingredient::Pour;
-use rettle::tea::Tea;
-use rettle::brewery::Brewery;
+use rettle::{
+    Pot,
+    Pour,
+    Tea,
+    Brewery,
+};
 
 use nom::{
     IResult,
