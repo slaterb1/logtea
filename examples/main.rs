@@ -2,7 +2,7 @@ use logtea::fill::{FillLogArg, FillLogTea};
 use rettle::pot::Pot;
 use rettle::ingredient::Pour;
 use rettle::tea::Tea;
-use rettle::brewer::Brewery;
+use rettle::brewery::Brewery;
 
 use nom::{
     IResult,
