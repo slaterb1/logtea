@@ -1,6 +1,11 @@
-use rettle::ingredient::{Ingredient, Argument, Fill};
-use rettle::brewery::{Brewery, make_tea};
-use rettle::tea::Tea;
+use rettle::{
+    Ingredient, 
+    Argument,
+    Fill,
+    Brewery,
+    make_tea,
+    Tea,
+};
 
 use std::sync::{Arc, RwLock};
 use std::io::{BufReader};
@@ -140,8 +145,10 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
 #[cfg(test)]
 mod tests {
     use super::{FillLogArg, FillLogTea};
-    use rettle::tea::Tea;
-    use rettle::pot::Pot;
+    use rettle::{
+        Tea,
+        Pot,
+    };
     use std::any::Any;
     use nom::IResult;
 

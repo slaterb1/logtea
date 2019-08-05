@@ -3,7 +3,12 @@ name = "logtea"
 version = "1.0.0"
 authors = ["Benjamin Slater <benjamin.ed.slater@gmail.com>"]
 edition = "2018"
+readme = "README.md"
+documentation = "https://docs.rs/logtea"
+repository = "https://github.com/slaterb1/logtea"
+description = "An Ingredient crate for working with LOG files in rettle."
+license = "MIT OR Apache-2.0"
 
 [dependencies]
-rettle = { git = "ssh://git@github.com/slaterb1/rettle" }
+rettle = "1"
 nom = "5.0.0"

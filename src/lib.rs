@@ -8,6 +8,19 @@ This is a generic log file Fill Ingredient crate for use with `rettle` ETL. This
 
 ## Example
 ```ignore
+#[derive(Default, Clone, Debug)]
+struct LogTea {
+    log_type: String,
+    datetime: String,
+    msg: String,
+}
+
+impl Tea for LogTea {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 // Custom parser setup.
 fn log_type(input: &str) -> IResult<&str, &str> {
     delimited(char('['), is_not("]"), char(']'))(input)
@@ -53,3 +66,6 @@ fn main() {
 */
 
 pub mod fill;
+
+// Re-exports
+pub use self::fill::{FillLogArg, FillLogTea};
