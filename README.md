@@ -1,4 +1,11 @@
 # logtea
+
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://travis-ci.com/slaterb1/logtea.svg?branch=master)](https://travis-ci.com/slaterb1/logtea)
+[![Crates.io Version](https://img.shields.io/crates/v/logtea.svg)](https://crates.io/crates/logtea)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.35.0+-lightgray.svg)](#rust-version-requirements)
+
 This is a generic log file Fill Ingredient crate for use with `rettle` ETL. This crate uses [nom](https://docs.rs/nom/) as the parser library to allow any project to define how it wants to parse logs by supplying a custom built parser.
 
 ## Data Structures
