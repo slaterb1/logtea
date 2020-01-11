@@ -2,7 +2,6 @@ use logtea::fill::{FillLogArg, FillLogTea};
 use rettle::{
     Pot,
     Pour,
-    Tea,
     Brewery,
 };
 
@@ -13,20 +12,11 @@ use nom::{
     bytes::complete::{tag, is_not, take},
 };
 
-use std::time::Instant;
-use std::any::Any;
-
 #[derive(Default, Clone, Debug)]
 struct LogTea {
     log_type: String,
     datetime: String,
     msg: String,
-}
-
-impl Tea for LogTea {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 // Helper functions for example log parser.
@@ -60,24 +50,23 @@ fn parse_log(input: &str) -> IResult<&str, LogTea> {
 fn main() {
     let test_fill_logarg = FillLogArg::new("fixtures/log.LOG", 50, parse_log);
 
-    let brewery = Brewery::new(4, Instant::now());
-    let mut new_pot = Pot::new();
+    let brewery = Brewery::new(4);
     let fill_logtea = FillLogTea::new::<LogTea>("log_tea_source", "log_fixture", test_fill_logarg);
 
-    new_pot.add_source(fill_logtea);
-
-    new_pot.add_ingredient(Box::new(Pour{
-        name: String::from("pour logs"),
-        computation: Box::new(|tea_batch, _args| {
-            tea_batch.into_iter()
-                .map(|tea| {
-                    println!("Final Tea: {:?}", tea.as_any().downcast_ref::<LogTea>().unwrap());
-                    tea
-                })
-                .collect()
-        }),
-        params: None,
-    }));
+    let new_pot = Pot::new()
+        .add_source(fill_logtea)
+        .add_ingredient(Box::new(Pour{
+            name: String::from("pour logs"),
+            computation: Box::new(|tea_batch: Vec<LogTea>, _args| {
+                tea_batch.into_iter()
+                    .map(|tea| {
+                        println!("Final Tea: {:?}", tea);
+                        tea
+                    })
+                    .collect()
+            }),
+            params: None,
+        }));
 
     new_pot.brew(&brewery);
 }

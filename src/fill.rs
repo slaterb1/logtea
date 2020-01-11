@@ -4,7 +4,6 @@ use rettle::{
     Fill,
     Brewery,
     make_tea,
-    Tea,
 };
 
 use std::sync::{Arc, RwLock};
@@ -19,7 +18,7 @@ use nom::IResult;
 ///
 /// Ingredient params for FillLogTea.
 pub struct FillLogArg<T> where
-    T: Tea + Send + Debug + Sized + 'static,
+    T: Send + Debug + Sized + 'static,
 {
     /// The filepath to the csv that will be processed.
     filepath: String,
@@ -28,7 +27,7 @@ pub struct FillLogArg<T> where
 }
 
 impl<T> FillLogArg<T> where
-    T: Tea + Send + Debug + Sized + 'static,
+    T: Send + Debug + Sized + 'static,
 {
     ///
     /// Returns a FillLogArg to be used as params in FillLogTea.
@@ -45,7 +44,7 @@ impl<T> FillLogArg<T> where
 }
 
 impl<T> Argument for FillLogArg<T> where
-    T: Tea + Send + Debug + Sized + 'static,
+    T: Send + Debug + Sized + 'static,
 {
     fn as_any(&self) -> &dyn Any {
         self
@@ -65,7 +64,7 @@ impl FillLogTea {
     /// * `name` - Ingredient name
     /// * `source` - Ingredient source
     /// * `params` - Params data structure holding the `filepath`, `batch_size`, and `parser`
-    pub fn new<T: Tea + Send + Debug + Sized + 'static>(name: &str, source: &str, params: FillLogArg<T>) -> Box<Fill> {
+    pub fn new<T: Send + Debug + Sized + 'static>(name: &str, source: &str, params: FillLogArg<T>) -> Box<Fill<T>> {
         Box::new(Fill {
             name: String::from(name),
             source: String::from(source),
@@ -84,7 +83,7 @@ impl FillLogTea {
 /// * `brewery` - Brewery that processes the data.
 /// * `recipe` - Recipe for the ETL used by the Brewery.
 /// * `tea_batch` - Current batch to be sent and processed
-fn call_brewery(brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient + Send + Sync>>>>, tea_batch: Vec<Box<dyn Tea + Send>>) {
+fn call_brewery<T: Send + 'static>(brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient<T> + Send + Sync>>>>, tea_batch: Vec<T>) {
     brewery.take_order(|| {
         make_tea(tea_batch, recipe);
     });
@@ -99,7 +98,7 @@ fn call_brewery(brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient + S
 /// * `args` - Params specifying the filepath, batch_size, and custom parser.
 /// * `brewery` - Brewery that processes the data.
 /// * `recipe` - Recipe for the ETL used by the Brewery.
-fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn Argument + Send>>, brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient + Send + Sync>>>>) {
+fn fill_from_log<T: Send + Debug + Sized + 'static>(args: &Option<Box<dyn Argument + Send>>, brewery: &Brewery, recipe: Arc<RwLock<Vec<Box<dyn Ingredient<T> + Send + Sync>>>>) {
     match args {
         None => (),
         Some(box_args) => {
@@ -124,7 +123,7 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
             let parser = &box_args.parser;
             
             // Iterate over log lines and push data into processer
-            let mut tea_batch: Vec<Box<dyn Tea + Send>> = Vec::with_capacity(box_args.batch_size);
+            let mut tea_batch: Vec<T> = Vec::with_capacity(box_args.batch_size);
             for line in reader.lines() {
                 let line = line.unwrap();
                 // Check if batch size has been reached and send to brewers if so.
@@ -134,7 +133,7 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
                     tea_batch = Vec::with_capacity(box_args.batch_size);
                 }
                 let (_input, tea) = parser(&line).unwrap();
-                tea_batch.push(Box::new(tea));
+                tea_batch.push(tea);
             }
             let recipe = Arc::clone(&recipe);
             call_brewery(brewery, recipe, tea_batch);
@@ -145,11 +144,7 @@ fn fill_from_log<T: Tea + Send + Debug + Sized + 'static>(args: &Option<Box<dyn 
 #[cfg(test)]
 mod tests {
     use super::{FillLogArg, FillLogTea};
-    use rettle::{
-        Tea,
-        Pot,
-    };
-    use std::any::Any;
+    use rettle::Pot;
     use nom::IResult;
 
     #[derive(Default, Clone, Debug)]
@@ -157,12 +152,6 @@ mod tests {
         log_type: String,
         datetime: String,
         msg: String,
-    }
-
-    impl Tea for TestLogTea {
-        fn as_any(&self) -> &dyn Any {
-            self
-        }
     }
 
     fn test_parser(input: &str) -> IResult<&str, TestLogTea> {
@@ -180,8 +169,8 @@ mod tests {
     fn create_fill_logtea() {
         let log_args = FillLogArg::new("fixtures/test.csv", 50, test_parser);
         let fill_logtea = FillLogTea::new::<TestLogTea>("test_log", "fixture", log_args);
-        let mut new_pot = Pot::new();
-        new_pot.add_source(fill_logtea);
+        let new_pot = Pot::new()
+            .add_source(fill_logtea);
         assert_eq!(new_pot.get_sources().len(), 1);
         assert_eq!(new_pot.get_sources()[0].get_name(), "test_log");
     }
