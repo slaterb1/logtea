@@ -53,10 +53,10 @@ fn main() {
     let test_fill_logarg = FillLogArg::new("fixtures/log.LOG", 50, parse_log);
 
     let brewery = Brewery::new(4, Instant::now());
-    let mut new_pot = Pot::new();
     let fill_logtea = FillLogTea::new::<LogTea>("log_tea_source", "log_fixture", test_fill_logarg);
 
-    new_pot.add_source(fill_logtea);
+    let new_pot = Pot::new()
+        .add_source(fill_logtea);
 
     // Steep/Pour operations of choice
 
